@@ -3,10 +3,7 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-// ==================================
-// REGISTER USER
-// ==================================
-
+ 
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, role, department } = req.body;
@@ -111,9 +108,7 @@ const registerUser = async (req, res) => {
   }
 };
 
-// ==================================
-// LOGIN USER
-// ==================================
+ 
 
 const loginUser = async (req, res) => {
   try {

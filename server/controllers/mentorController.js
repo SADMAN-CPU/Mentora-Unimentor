@@ -1,5 +1,5 @@
-
 const MentorProfile = require("../models/MentorProfile");
+const { validateCareerJourney } = require("../utils/careerJourney");
 
 // Allowed mentor roles
 const mentorRoles = [
@@ -7,10 +7,6 @@ const mentorRoles = [
   "Alumni",
   "Industry Expert"
 ];
-
-// =================================
-// CREATE MENTOR PROFILE
-// =================================
 
 const createMentorProfile = async (req, res) => {
   try {
@@ -56,6 +52,19 @@ const createMentorProfile = async (req, res) => {
       });
     }
 
+    // Validate and clean the career journey (alumni only)
+    let journeyEntries = [];
+
+    if (req.user.role === "Alumni") {
+      const result = validateCareerJourney(careerJourney);
+
+      if (result.error) {
+        return res.status(400).json({ message: result.error });
+      }
+
+      journeyEntries = result.entries;
+    }
+
     // Check existing profile
     const existingProfile = await MentorProfile.findOne({
       userId: req.user._id
@@ -75,7 +84,7 @@ const createMentorProfile = async (req, res) => {
       company,
       expertise,
       weeklyAvailability,
-      careerJourney
+      careerJourney: journeyEntries
     });
 
     return res.status(201).json({
@@ -107,10 +116,6 @@ const createMentorProfile = async (req, res) => {
   }
 };
 
-// =================================
-// GET MY MENTOR PROFILE
-// =================================
-
 const getMyMentorProfile = async (req, res) => {
   try {
     const profile = await MentorProfile.findOne({
@@ -136,10 +141,6 @@ const getMyMentorProfile = async (req, res) => {
     });
   }
 };
-
-// =================================
-// UPDATE MY MENTOR PROFILE
-// =================================
 
 const updateMentorProfile = async (req, res) => {
   try {
@@ -168,6 +169,17 @@ const updateMentorProfile = async (req, res) => {
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
       }
+    }
+
+    // Validate and clean the career journey before saving
+    if (updates.careerJourney !== undefined) {
+      const result = validateCareerJourney(updates.careerJourney);
+
+      if (result.error) {
+        return res.status(400).json({ message: result.error });
+      }
+
+      updates.careerJourney = result.entries;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -214,10 +226,53 @@ const updateMentorProfile = async (req, res) => {
   }
 };
 
+// Students can read alumni career journeys (no email or private data)
+const getAlumniCareerJourneys = async (req, res) => {
+  try {
+    const profiles = await MentorProfile.find({
+      "careerJourney.0": { $exists: true }
+    })
+      .populate({
+        path: "userId",
+        match: { role: "Alumni" },
+        select: "name department verified"
+      })
+      .select("userId department company expertise careerJourney")
+      .limit(100)
+      .lean();
 
+    const alumni = profiles
+      .filter((profile) => profile.userId)
+      .map((profile) => ({
+        id: profile.userId._id,
+        name: profile.userId.name,
+        verified: Boolean(profile.userId.verified),
+        department: profile.department || profile.userId.department || "",
+        company: profile.company,
+        expertise: profile.expertise,
+        careerJourney: profile.careerJourney
+      }))
+      // Verified alumni first
+      .sort((a, b) => Number(b.verified) - Number(a.verified));
+
+    return res.status(200).json({
+      message: "Alumni career journeys fetched successfully",
+      count: alumni.length,
+      alumni
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Failed to fetch alumni career journeys"
+    });
+  }
+};
 
 module.exports = {
   createMentorProfile,
   getMyMentorProfile,
-  updateMentorProfile
+  updateMentorProfile,
+  getAlumniCareerJourneys
 };

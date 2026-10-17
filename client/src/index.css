@@ -76,3 +76,180 @@ body {
   text-align: center;
   margin-top: 80px;
 }
+.auth-card.wide {
+  width: min(720px, calc(100% - 32px));
+}
+
+.auth-card textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.hint {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.journey-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.journey-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+}
+
+.journey-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.journey-years {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.auth-card .btn-small {
+  width: auto;
+  margin-top: 0;
+  padding: 8px 14px;
+  font-size: 14px;
+  align-self: flex-start;
+}
+
+.auth-card .btn-outline-small {
+  color: #2563eb;
+  background: white;
+  border: 1px solid #2563eb;
+}
+
+.auth-card .btn-danger-outline {
+  color: #dc2626;
+  background: white;
+  border: 1px solid #dc2626;
+}
+
+.journey-page {
+  width: min(860px, calc(100% - 32px));
+  margin: 40px auto;
+}
+
+.journey-page h1 {
+  color: #2563eb;
+}
+
+.journey-search {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0 20px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.journey-list {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.journey-card {
+  padding: 22px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+}
+
+.journey-card header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.journey-card h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.journey-meta {
+  margin: 4px 0 16px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.badge-verified {
+  padding: 3px 10px;
+  color: #166534;
+  background: #dcfce7;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 22px;
+  border-left: 2px solid #bfdbfe;
+}
+
+.timeline li {
+  position: relative;
+  padding: 0 0 18px 16px;
+  line-height: 1.5;
+}
+
+.timeline li:last-child {
+  padding-bottom: 0;
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -29px;
+  top: 6px;
+  width: 12px;
+  height: 12px;
+  background: #2563eb;
+  border: 2px solid white;
+  border-radius: 50%;
+}
+
+.timeline-stage {
+  display: block;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.timeline-years {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.timeline-note {
+  margin: 4px 0 0;
+  color: #475569;
+  font-size: 14px;
+}

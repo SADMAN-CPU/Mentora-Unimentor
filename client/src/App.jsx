@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import StudentProfile from "./pages/StudentProfile";
 import MentorProfile from "./pages/MentorProfile";
+import AlumniJourneys from "./pages/AlumniJourneys";
 
 function App() {
   return (
@@ -33,7 +34,12 @@ function App() {
           path="/mentor-profile"
           element={<MentorProfile />}
         />
-        
+
+        <Route
+          path="/alumni"
+          element={<AlumniJourneys />}
+        />
+
       </Routes>
     </BrowserRouter>
   );

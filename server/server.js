@@ -22,6 +22,21 @@ app.get("/", (req, res) => {
   res.send("Mentora Server Running");
 });
 
+// Unknown API route
+app.use("/api", (req, res) => {
+  res.status(404).json({ message: "API route not found" });
+});
+
+// Malformed JSON body and other unhandled errors
+app.use((err, req, res, next) => {
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({ message: "Invalid JSON body" });
+  }
+
+  console.error(err);
+  res.status(500).json({ message: "Something went wrong" });
+});
+
 const startServer = async () => {
   await connectDB();
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
@@ -8,6 +7,29 @@ const mentorRoles = [
   "Alumni",
   "Industry Expert"
 ];
+
+const journeyStages = [
+  "University",
+  "Internship",
+  "Job",
+  "Current Role"
+];
+
+const MAX_JOURNEY_ENTRIES = 10;
+
+let entryCounter = 0;
+
+// Empty career journey entry (key is only used by React)
+const newEntry = (values = {}) => ({
+  key: `entry-${++entryCounter}`,
+  stage: "University",
+  organization: "",
+  role: "",
+  startYear: "",
+  endYear: "",
+  description: "",
+  ...values
+});
 
 function MentorProfile() {
   const navigate = useNavigate();
@@ -22,11 +44,11 @@ function MentorProfile() {
     expertise: "",
     day: "Saturday",
     startTime: "10:00",
-    endTime: "12:00",
-    stage: "University",
-    organization: "",
-    journeyRole: ""
+    endTime: "12:00"
   });
+
+  // Alumni career journey (University -> Internship -> Job -> Current Role)
+  const [journey, setJourney] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,6 +66,32 @@ function MentorProfile() {
       ...previous,
       [name]: value
     }));
+  };
+
+  // ==================================
+  // CAREER JOURNEY ENTRIES
+  // ==================================
+
+  const addJourneyEntry = () => {
+    setJourney((previous) =>
+      previous.length >= MAX_JOURNEY_ENTRIES
+        ? previous
+        : [...previous, newEntry()]
+    );
+  };
+
+  const updateJourneyEntry = (key, field, value) => {
+    setJourney((previous) =>
+      previous.map((entry) =>
+        entry.key === key ? { ...entry, [field]: value } : entry
+      )
+    );
+  };
+
+  const removeJourneyEntry = (key) => {
+    setJourney((previous) =>
+      previous.filter((entry) => entry.key !== key)
+    );
   };
 
   // ==================================
@@ -94,9 +142,6 @@ function MentorProfile() {
           const availability =
             profile.weeklyAvailability?.[0] || {};
 
-          const journey =
-            profile.careerJourney?.[0] || {};
-
           setForm({
             department: profile.department || "",
             skills: (profile.skills || []).join(", "),
@@ -104,11 +149,21 @@ function MentorProfile() {
             expertise: profile.expertise || "",
             day: availability.day || "Saturday",
             startTime: availability.startTime || "10:00",
-            endTime: availability.endTime || "12:00",
-            stage: journey.stage || "University",
-            organization: journey.organization || "",
-            journeyRole: journey.role || ""
+            endTime: availability.endTime || "12:00"
           });
+
+          setJourney(
+            (profile.careerJourney || []).map((entry) =>
+              newEntry({
+                stage: entry.stage || "University",
+                organization: entry.organization || "",
+                role: entry.role || "",
+                startYear: entry.startYear ?? "",
+                endYear: entry.endYear ?? "",
+                description: entry.description || ""
+              })
+            )
+          );
 
           setProfileExists(true);
 
@@ -166,6 +221,38 @@ function MentorProfile() {
       return;
     }
 
+    // Career journey checks (alumni only)
+    if (role === "Alumni") {
+      const currentRoles = journey.filter(
+        (entry) => entry.stage === "Current Role"
+      );
+
+      if (currentRoles.length > 1) {
+        setError("Only one Current Role entry is allowed");
+        return;
+      }
+
+      for (const entry of journey) {
+        if (!entry.organization.trim() || !entry.role.trim()) {
+          setError(
+            "Fill in organization and role for every career journey entry, or remove the entry"
+          );
+          return;
+        }
+
+        if (
+          entry.startYear &&
+          entry.endYear &&
+          Number(entry.startYear) > Number(entry.endYear)
+        ) {
+          setError(
+            `${entry.stage}: start year cannot be after end year`
+          );
+          return;
+        }
+      }
+    }
+
     // Convert comma-separated skills into array
     const skillsArray = form.skills
       .split(",")
@@ -187,18 +274,16 @@ function MentorProfile() {
       ]
     };
 
-    // Alumni can also provide career journey
+    // Alumni can also provide their career journey
     if (role === "Alumni") {
-      profileData.careerJourney =
-        form.organization.trim() && form.journeyRole.trim()
-          ? [
-              {
-                stage: form.stage,
-                organization: form.organization.trim(),
-                role: form.journeyRole.trim()
-              }
-            ]
-          : [];
+      profileData.careerJourney = journey.map((entry) => ({
+        stage: entry.stage,
+        organization: entry.organization.trim(),
+        role: entry.role.trim(),
+        startYear: entry.startYear ? Number(entry.startYear) : null,
+        endYear: entry.endYear ? Number(entry.endYear) : null,
+        description: entry.description.trim()
+      }));
     }
 
     setSaving(true);
@@ -221,6 +306,22 @@ function MentorProfile() {
       }
 
       setProfileExists(true);
+
+      // Show the journey in the order saved by the server
+      if (role === "Alumni" && response.data.profile?.careerJourney) {
+        setJourney(
+          response.data.profile.careerJourney.map((entry) =>
+            newEntry({
+              stage: entry.stage,
+              organization: entry.organization,
+              role: entry.role,
+              startYear: entry.startYear ?? "",
+              endYear: entry.endYear ?? "",
+              description: entry.description || ""
+            })
+          )
+        );
+      }
 
       setMessage(
         response.data.message ||
@@ -264,7 +365,7 @@ function MentorProfile() {
   }
 
   return (
-    <div className="auth-card">
+    <div className="auth-card wide">
       <h1>Mentora</h1>
 
       <h2>
@@ -362,38 +463,137 @@ function MentorProfile() {
 
         {/* Career Journey for Alumni */}
         {role === "Alumni" && (
-          <>
+          <section className="journey-editor">
             <h3>Career Journey</h3>
 
-            <label>Career Stage</label>
-            <select
-              name="stage"
-              value={form.stage}
-              onChange={handleChange}
+            <p className="hint">
+              Share your path (University → Internship → Job → Current
+              Role) so students can learn from it. Entries are ordered
+              automatically.
+            </p>
+
+            {journey.length === 0 && (
+              <p className="hint">
+                No stages added yet. Click "Add Stage" to start.
+              </p>
+            )}
+
+            {journey.map((entry, index) => (
+              <div className="journey-entry" key={entry.key}>
+                <div className="journey-entry-header">
+                  <strong>Stage {index + 1}</strong>
+
+                  <button
+                    type="button"
+                    className="btn-small btn-danger-outline"
+                    onClick={() => removeJourneyEntry(entry.key)}
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <label>Career Stage</label>
+                <select
+                  value={entry.stage}
+                  onChange={(e) =>
+                    updateJourneyEntry(entry.key, "stage", e.target.value)
+                  }
+                >
+                  {journeyStages.map((stage) => (
+                    <option key={stage} value={stage}>
+                      {stage}
+                    </option>
+                  ))}
+                </select>
+
+                <label>Organization</label>
+                <input
+                  type="text"
+                  value={entry.organization}
+                  maxLength={100}
+                  placeholder="University or company name"
+                  onChange={(e) =>
+                    updateJourneyEntry(
+                      entry.key,
+                      "organization",
+                      e.target.value
+                    )
+                  }
+                />
+
+                <label>Role / Degree</label>
+                <input
+                  type="text"
+                  value={entry.role}
+                  maxLength={100}
+                  placeholder="BSc in Software Engineering / Software Engineer"
+                  onChange={(e) =>
+                    updateJourneyEntry(entry.key, "role", e.target.value)
+                  }
+                />
+
+                <div className="journey-years">
+                  <div>
+                    <label>Start Year</label>
+                    <input
+                      type="number"
+                      value={entry.startYear}
+                      min="1950"
+                      placeholder="2020"
+                      onChange={(e) =>
+                        updateJourneyEntry(
+                          entry.key,
+                          "startYear",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label>End Year</label>
+                    <input
+                      type="number"
+                      value={entry.endYear}
+                      min="1950"
+                      placeholder="Leave empty if ongoing"
+                      onChange={(e) =>
+                        updateJourneyEntry(
+                          entry.key,
+                          "endYear",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+
+                <label>What did you learn? (optional)</label>
+                <textarea
+                  rows={2}
+                  value={entry.description}
+                  maxLength={300}
+                  placeholder="Short advice or highlight from this stage"
+                  onChange={(e) =>
+                    updateJourneyEntry(
+                      entry.key,
+                      "description",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+            ))}
+
+            <button
+              type="button"
+              className="btn-small btn-outline-small"
+              onClick={addJourneyEntry}
+              disabled={journey.length >= MAX_JOURNEY_ENTRIES}
             >
-              <option value="University">University</option>
-              <option value="Internship">Internship</option>
-              <option value="Job">Job</option>
-            </select>
-
-            <label>Organization</label>
-            <input
-              type="text"
-              name="organization"
-              value={form.organization}
-              onChange={handleChange}
-              placeholder="University or Company"
-            />
-
-            <label>Role</label>
-            <input
-              type="text"
-              name="journeyRole"
-              value={form.journeyRole}
-              onChange={handleChange}
-              placeholder="Software Engineer"
-            />
-          </>
+              + Add Stage
+            </button>
+          </section>
         )}
 
         <button type="submit" disabled={saving}>

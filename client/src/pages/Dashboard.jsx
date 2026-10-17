@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
@@ -141,6 +140,19 @@ function Dashboard() {
           onClick={() => navigate("/mentor-profile")}
         >
           Edit Mentor Profile
+        </button>
+      )}
+
+      {/* ==================================
+          ALUMNI CAREER JOURNEYS
+      ================================== */}
+
+      {!isAdmin && (
+        <button
+          type="button"
+          onClick={() => navigate("/alumni")}
+        >
+          Explore Alumni Career Journeys
         </button>
       )}
 

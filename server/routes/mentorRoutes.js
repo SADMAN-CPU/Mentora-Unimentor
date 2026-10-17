@@ -6,7 +6,8 @@ const protect = require("../middleware/authMiddleware");
 const {
   createMentorProfile,
   getMyMentorProfile,
-  updateMentorProfile
+  updateMentorProfile,
+  getAlumniCareerJourneys
 } = require("../controllers/mentorController");
 
 // All mentor routes require login
@@ -20,5 +21,8 @@ router.get("/profile/me", getMyMentorProfile);
 
 // Update My Mentor Profile
 router.put("/profile/me", updateMentorProfile);
+
+// Browse alumni career journeys (any logged-in user)
+router.get("/alumni", getAlumniCareerJourneys);
 
 module.exports = router;

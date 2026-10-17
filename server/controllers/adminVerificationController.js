@@ -4,9 +4,7 @@ const fs = require("fs/promises");
 const Verification = require("../models/Verification");
 const User = require("../models/User");
 
-// ===================================
-// GET ALL PENDING VERIFICATION REQUESTS
-// ===================================
+ 
 
 const getPendingVerifications = async (req, res) => {
   try {
@@ -35,9 +33,7 @@ const getPendingVerifications = async (req, res) => {
 };
 
 
- // ==================================
- // ADMIN VIEW VERIFICATION DOCUMENT
- // ==================================
+  
 
 const getVerificationDocument = async (req, res) => {
   try {
@@ -113,9 +109,7 @@ const getVerificationDocument = async (req, res) => {
   }
 };
 
- // ===================================
- // APPROVE MENTOR VERIFICATION
- // ===================================
+ 
 
 const approveVerification = async (req, res) => {
   try {
@@ -205,9 +199,7 @@ const approveVerification = async (req, res) => {
   }
 };
 
- // ===================================
- // REJECT MENTOR VERIFICATION
- // ===================================
+ 
 
 const rejectVerification = async (req, res) => {
   try {
